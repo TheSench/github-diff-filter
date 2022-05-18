@@ -1,5 +1,3 @@
-const test = require('test')
-
 (function () {
   /** @type {Set<HTMLElement>} */
   const hiddenElements = new Set();
@@ -8,24 +6,21 @@ const test = require('test')
   var cssTemplate = '<style>@@include("style.min.css")</style>';
   var formTemplate = '@@include("../temp/html/form.html")';
   var viewedTemplate = '@@include("../temp/html/viewed.html")';
+  var pathTemplate = '@@include("../temp/html/path.html")';
 
   // If not already done, attach the CSS to the head and the overlay markup to the body.
   /** @type {HTMLDivElement} */
   let gdf = document.querySelector('#gdf');
   if (!gdf) {
+    /** @type {HTMLInputElement} */
+    let txtFilter;
+    /** @type {HTMLButtonElement} */
+    let btnShowAll;
+  
     appendStyles();
     appendFilterForm();
-    addFormListeners();
     appendViewedCheckboxes();
-
-    /** @type {HTMLInputElement} */
-    const txtFilter = document.querySelector('#gdf-hide-input');
-    /** @type {HTMLAnchorElement} */
-    const btnHide = document.querySelector('#gdf-hide-btn');
-    /** @type {HTMLButtonElement} */
-    const btnShowAll = document.querySelector('#gdf-show-all-btn');
-    /** @type {HTMLAnchorElement} */
-    const btnClose = document.querySelector('#gdf-close-btn');
+    appendPathFilters();
 
     /**
      * 
@@ -44,18 +39,16 @@ const test = require('test')
         document.createRange().createContextualFragment(formTemplate)
       );
       gdf = document.querySelector("#gdf");
-    }
-
-    /**
-     * 
-     */
-    function addFormListeners() {
-      btnHide.addEventListener('click', applyFilter);
-      txtFilter.addEventListener('keyup', filterOnEnter);
-      btnShowAll.addEventListener('click', showAll);
-      btnClose.addEventListener('click', function () {
+      document.querySelector('#gdf-hide-btn').addEventListener('click', applyFilter);
+      document.querySelector('#gdf-close-btn').addEventListener('click', function () {
         gdf.hidden = true;
       });
+
+      txtFilter = document.querySelector('#gdf-hide-input');
+      txtFilter.addEventListener('keyup', filterOnEnter);
+      
+      btnShowAll = document.querySelector('#gdf-show-all-btn');
+      btnShowAll.addEventListener('click', showAll);
     }
 
     /**
@@ -70,6 +63,32 @@ const test = require('test')
       document.querySelector('.js-diff-progressive-container').addEventListener('change', (event) => {
         if (event.target.classList.contains('js-reviewed-checkbox')) {
           event.target.parentElement.previousSibling.querySelector("button")?.click();
+        }
+      });
+    }
+
+    /**
+     * 
+     */
+    function appendPathFilters() {
+      const list = document.createElement('ul');
+      getRootPaths().forEach(path => {
+        list.append(
+          document.createRange().createContextualFragment(pathTemplate.replaceAll('{{Path}}', path))
+        );
+      });
+      document.querySelector('#toc').after(list);
+      list.addEventListener("click", event => {
+        if (event.target.nodeName === 'LABELS') {
+          event.target.querySelector('input').click();
+        }
+      });
+      list.addEventListener('change', (event) => {
+        const path = event.target.value;
+        if (event.target.checked) {
+          unfilterPath(path);
+        } else {
+          filterPath(path);
         }
       });
     }
@@ -113,6 +132,17 @@ const test = require('test')
 
     /**
      * 
+     * @param {string} path 
+     */
+    function unfilterPath(path) {
+      const replacementPattern = toRegex(path);
+      showTableOfContentsEntry(replacementPattern);
+      showDiffEntry(replacementPattern);
+      updateCounts();
+    }
+
+    /**
+     * 
      * @param {string} pattern 
      */
     function hideTableOfContentsEntry(pattern) {
@@ -120,6 +150,17 @@ const test = require('test')
         .filter(el => el.textContent.match(pattern))
         .map(el => el.closest('li'))
         .forEach(hide)
+    }
+
+    /**
+     * 
+     * @param {string} pattern 
+     */
+    function showTableOfContentsEntry(pattern) {
+      [...document.querySelectorAll('#toc a[href^="#diff"]')]
+        .filter(el => el.textContent.match(pattern))
+        .map(el => el.closest('li'))
+        .forEach(show)
     }
 
     /**
@@ -140,6 +181,16 @@ const test = require('test')
 
     /**
      * 
+     * @param {string} pattern 
+     */
+    function showDiffEntry(pattern) {
+      [...document.querySelectorAll(`[data-tagsearch-path]`)]
+        .filter(el => el.attributes['data-tagsearch-path']?.value.match(pattern))
+        .forEach(show)
+    }
+
+    /**
+     * 
      * @param {string} wildcardPattern 
      * @returns 
      */
@@ -154,12 +205,36 @@ const test = require('test')
 
     /**
      * 
+     * @returns 
+     */
+    function getRootPaths() {
+      return [...new Set(
+        [...document.querySelectorAll('[data-tagsearch-path]')]
+          .map(el => el.attributes['data-tagsearch-path'].value)
+          .map(path => path.split('/')[0])
+      )]
+        .map(path => path + "/*");
+    }
+
+    /**
+     * 
      * @param {HTMLElement} el 
      */
     function hide(el) {
       if (!hiddenElements.has(el)) {
         el.hidden = true;
         hiddenElements.add(el);
+      }
+    }
+
+    /**
+     * 
+     * @param {HTMLElement} el 
+     */
+    function show(el) {
+      if (hiddenElements.has(el)) {
+        el.hidden = false;
+        hiddenElements.delete(el);
       }
     }
 
