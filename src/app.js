@@ -1,67 +1,109 @@
 (function () {
-
-  // console.log('Initializing github-diff-filter');
+  /** @type {Set<HTMLElement>} */
+  const hiddenElements = new Set();
 
   // Includes processed by grunt-include-replace.
-  var css = '<style>@@include("style.min.css")</style>';
-  var form = '@@include("../temp/html/form.html")';
+  var cssTemplate = '<style>@@include("style.min.css")</style>';
+  var formTemplate = '@@include("../temp/html/form.html")';
 
   // If not already done, attach the CSS to the head and the overlay markup to the body.
-  if ($('#gdf').length === 0) {
-    $('head').append(css);
-    $('.header .container').append(form);
-  }
+  /** @type {HTMLDivElement} */
+  let gdf = document.querySelector('#gdf');
+  if (!gdf) {
+    appendStyles();
+    appendFilterForm();
+    appendViewedCheckboxes();
+    appendPathFilters();
 
-  // Create the function that hides files.
-  window.gdfHide = function (event) {
-    // If hitting enter (from the input) or clicking the button.
-    if (event.which == 13 || event.which == 1) {
-      var query = $('#gdf-hide-input').val();
+    /** @type {HTMLInputElement} */
+    const txtFilter = document.querySelector('#gdf-hide-input');
+    /** @type {HTMLAnchorElement} */
+    const btnHide = document.querySelector('#gdf-hide-btn');
+    /** @type {HTMLButtonElement} */
+    const btnShowAll = document.querySelector('#gdf-show-all-btn');
+    /** @type {HTMLAnchorElement} */
+    const btnClose = document.querySelector('#gdf-close-btn');
+
+    function appendStyles() {
+      document.head.append(
+        document.createRange().createContextualFragment(cssTemplate)
+      );
+    }
+
+    function appendFilterForm() {
+      document.querySelector('.toc-diff-stats').append(
+        document.createRange().createContextualFragment(formTemplate)
+      );
+      gdf = document.querySelector("#gdf");
+    }
+
+    function applyFilter() {
+      var query = txtFilter.value;
 
       if (query !== '') {
-        // console.log("github-diff-filter: hiding paths matching '" + query + "'");
+        query.split(',').forEach(filterPath);
 
-        $.each(query.split(','), function (key, value) {
-          // Remove from Diff Stats list.
-          $('a[href^="#diff"]:contains(' + value + ')').parent().hide();
+        btnShowAll.disabled = false;
+        txtFilter.value = '';
+        txtFilter.focus();
+      }
+    };
 
-          // Remove the actual file diffs.
-          $('[data-path*="' + value + '"]').parent().hide();
-        });
+    /**
+     * 
+     * @param {string} path 
+     */
+    function filterPath(path) {
+      hideTableOfContentsEntry(path);
+      hideDiffEntry(path);
+      updateCounts();
+    }
 
-        // Enable the "Show all files" button
-        $('#gdf-show-all-btn').removeAttr('disabled');
+    /**
+     * 
+     * @param {string} path 
+     */
+    function hideTableOfContentsEntry(path) {
+      [...document.querySelectorAll('#toc a[href^="#diff"]')]
+        .filter(el => el.textContent.match(path))
+        .map(el => el.closest('li'))
+        .forEach(hide)
+    }
 
-        // Clear the input field and refocus on it for entering another value.
-        $('#gdf-hide-input').val('').focus();
+    /**
+     * 
+     * @param {string} path 
+     */
+    function hideDiffEntry(path) {
+      [...document.querySelectorAll(`[data-tagsearch-path]`)]
+        .filter(el => el.attributes['data-tagsearch-path']?.value.match(path))
+        .forEach(hide)
+    }
+
+    /**
+     * 
+     * @param {HTMLElement} element 
+     */
+    function hide(element) {
+      if (!hiddenElements.has(element)) {
+        element.hidden = true;
+        hiddenElements.add(element);
       }
     }
-  };
 
-  // Bind event listeners to the button and input field that call gdfHide.
-  $('#gdf-hide-btn').click(gdfHide);
-  $('#gdf-hide-input').keyup(gdfHide);
+    function showAll() {
+      hiddenElements.forEach(el => el.hidden = false)
+      hiddenElements.clear();
+      btnShowAll.disabled = true;
+    };
 
-  // Create the function that shows files.
-  window.gdfShow = function (event) {
-    // console.log("github-diff-filter: showing all files");
-      
-    // Show all in Diff Stats list.
-    $('a[href^="#diff"]').parent().show();
-
-    // Show all of the actual file diffs.
-    $('[data-path]').parent().show();
-
-    // Hide the "Show all files" button.
-    $('#gdf-show-all-btn').attr('disabled', true);
-  };
-
-  // Bind event listener to the "Show all files" button.
-  $('#gdf-show-all-btn').click(gdfShow);
-
-  // Hide the overlay if the close button is clicked.
-  $('#gdf-close-btn').click(function () {
-    $(this).parent().remove();
-  });
-
+    btnHide.addEventListener('click', applyFilter);
+    txtFilter.addEventListener('keyup', (event) => (event.key === 'Enter') && applyFilter());
+    btnShowAll.addEventListener('click', showAll);
+    btnClose.addEventListener('click', function () {
+      gdf.hidden = true;
+    });
+  }
+  
+  gdf.hidden = true;
 })();
