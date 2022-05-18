@@ -28,6 +28,9 @@
   "engines": {
     "node": ">=0.8.0"
   },
+  "scripts": {
+    "build": "grunt"
+  },
   "devDependencies": {
     "grunt": "latest",
     "grunt-contrib-jshint": "latest",
