@@ -7,6 +7,7 @@
   var formTemplate = '@@include("../temp/html/form.html")';
   var viewedTemplate = '@@include("../temp/html/viewed.html")';
   var pathTemplate = '@@include("../temp/html/path.html")';
+  var fileTreeTemplate = '@@include("../temp/html/fileTree.html")';
 
   // If not already done, attach the CSS to the head and the overlay markup to the body.
   /** @type {HTMLDivElement} */
@@ -21,6 +22,7 @@
     appendFilterForm();
     appendViewedCheckboxes();
     appendPathFilters();
+    appendFileTree();
 
     /**
      * 
@@ -94,6 +96,28 @@
           filterPath(path);
         }
       });
+    }
+
+    /**
+     *
+     */
+    function appendFileTree() {
+      const filesContainer = document.querySelector('#files');
+      filesContainer.prepend(
+        document.createRange().createContextualFragment(fileTreeTemplate)
+      );
+      filesContainer.classList.add(
+        'Layout',
+        'Layout--flowRow-until-lg',
+        'Layout--gutter-condensed',
+        'hx_Layout',
+        'wants-full-width-container',
+        'Layout--sidebarPosition-start',
+        'Layout--sidebarPosition-flowRow-none'
+      );
+      // Move all children from first js-diff-progressive-container to second to resolve styling issues
+      const diffContainers = document.querySelectorAll('.js-diff-progressive-container');
+      diffContainers[1].replaceChildren(...diffContainers[0].childNodes, ...diffContainers[1].childNodes);
     }
 
     // Create the function that hides files.
