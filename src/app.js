@@ -16,7 +16,7 @@
     let txtFilter;
     /** @type {HTMLButtonElement} */
     let btnShowAll;
-  
+
     appendStyles();
     appendFilterForm();
     appendViewedCheckboxes();
@@ -46,7 +46,7 @@
 
       txtFilter = document.querySelector('#gdf-hide-input');
       txtFilter.addEventListener('keyup', filterOnEnter);
-      
+
       btnShowAll = document.querySelector('#gdf-show-all-btn');
       btnShowAll.addEventListener('click', showAll);
     }
@@ -62,7 +62,10 @@
       });
       document.querySelector('.js-diff-progressive-container').addEventListener('change', (event) => {
         if (event.target.classList.contains('js-reviewed-checkbox')) {
-          event.target.parentElement.previousSibling.querySelector("button")?.click();
+          const isOpen = event.target.closest('[data-details-container-group]').classList.contains('open');
+          if (isOpen === event.target.checked) {
+            event.target.parentElement.previousSibling.querySelector("button")?.click();
+          }
         }
       });
     }
