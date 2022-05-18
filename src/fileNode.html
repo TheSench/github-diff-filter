@@ -1,6 +1,6 @@
 <li id="file-tree-item-diff-5328ef2ffd2cdbddc3e660a660a1b1cfc23796ef40179a366e395a9cbbab3aa3"
-    class="ActionList-item ActionList-item--subItem js-tree-node" role="treeitem" aria-level="2"
-    style="--ActionList-tree-depth: 2"
+    class="ActionList-item ActionList-item--subItem js-tree-node" role="treeitem" aria-level="{{level}}"
+    style="--ActionList-tree-depth: {{level}}"
     data-action="click:action-list#handleItemClick click:file-tree#instrumentSelectFile"
     data-target="file-tree.fileTreeNode" data-targets="
 diff-file-filter.treeEntries
@@ -16,7 +16,7 @@ file-tree.fileTreeNodes
             </svg>
         </span>
         <span class="ActionList-item-label ActionList-item-label--truncate hx_ActionList-item-label">
-            {{fileName}}}}
+            {{fileName}}
         </span>
         <span class="ActionList-item-visual ActionList-item-visual--trailing hx_ActionList-item-visual">
             <svg title="modified" aria-hidden="true" height="16" viewBox="0 0 16 16" version="1.1" width="16"

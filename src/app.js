@@ -149,9 +149,8 @@
     }
 
     function buildFileTreeView() {
-      debugger;
       const pathTree = getPathTree();
-      return buildDirectoryNodes(pathTree);
+      return buildDirectoryNodes(pathTree, 1);
     }
 
     /**
@@ -159,36 +158,39 @@
      * @param {Directory} pathTree 
      * @param {string?} [prefix=]
      */
-    function buildDirectoryNodes(pathTree, prefix) {
+    function buildDirectoryNodes(pathTree, level, prefix) {
       prefix ??= '';
       return Object.entries(pathTree.subDirs)
-        .map(([dirName, dir]) => createDirectoryNode(dirName, dir));
+        .map(([dirName, dir]) => createDirectoryNode(dirName, dir, level));
     }
 
     /**
      * 
      * @param {Array<File>} files 
      */
-    function buildFileNodes(files) {
+    function buildFileNodes(files, level) {
       return files
         .map(({ fullName, fileName }) => {
           return document.createRange().createContextualFragment(
             fileNodeTemplate
-              .replace('{{fullName}}', fullName)
-              .replace('{{fileName}}', fileName)
+              .replaceAll('{{fullName}}', fullName)
+              .replaceAll('{{fileName}}', fileName)
+              .replaceAll('{{level}}', level)
           );
         });
     }
 
-    function createDirectoryNode(dirName, dir) {
+    function createDirectoryNode(dirName, dir, level) {
       const dirNode = document.createRange().createContextualFragment(
-        dirNodeTemplate.replace('{{dirName}}', dirName)
+        dirNodeTemplate
+          .replaceAll('{{dirName}}', dirName)
+          .replaceAll('{{level}}', level)
       );
       dirNode.querySelector('ul').append(
-        ...buildDirectoryNodes(dir)
+        ...buildDirectoryNodes(dir, level + 1)
       );
       dirNode.querySelector('ul').append(
-        ...buildFileNodes(dir.files)
+        ...buildFileNodes(dir.files, level + 1)
       );
       return dirNode;
     }
