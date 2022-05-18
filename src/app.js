@@ -57,19 +57,21 @@
      * 
      */
     function appendViewedCheckboxes() {
-      document.querySelectorAll('.file-info').forEach(el => {
-        el.after(
+      document.querySelectorAll('.js-file-header-dropdown').forEach(el => {
+        el.before(
           document.createRange().createContextualFragment(viewedTemplate)
         );
       });
-      document.querySelector('.js-diff-progressive-container').addEventListener('change', (event) => {
-        if (event.target.classList.contains('js-reviewed-checkbox')) {
-          const isOpen = event.target.closest('[data-details-container-group]').classList.contains('open');
-          if (isOpen === event.target.checked) {
-            event.target.parentElement.previousSibling.querySelector("button")?.click();
+      document.querySelectorAll('.js-diff-progressive-container')
+        .forEach(container => container.addEventListener('change', (event) => {
+          if (event.target.classList.contains('js-reviewed-checkbox')) {
+            const container = event.target.closest("[data-details-container-group]")
+            const isOpen = container.classList.contains("open");
+            if (isOpen === event.target.checked) {
+                container.querySelector('.file-header .file-info button')?.click();
+            }
           }
-        }
-      });
+        }));
     }
 
     /**
