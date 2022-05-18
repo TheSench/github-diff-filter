@@ -148,6 +148,10 @@
       }
     }
 
+    /**
+     * 
+     * @returns {Array<DocumentFragment>}
+     */
     function buildFileTreeView() {
       const pathTree = getPathTree();
       return buildDirectoryNodes(pathTree, 1);
@@ -155,11 +159,11 @@
 
     /**
      * 
-     * @param {Directory} pathTree 
-     * @param {string?} [prefix=]
+     * @param {Directory} pathTree
+     * @param {number} level
+     * @returns {Array<DocumentFragment>}
      */
-    function buildDirectoryNodes(pathTree, level, prefix) {
-      prefix ??= '';
+    function buildDirectoryNodes(pathTree, level) {
       return Object.entries(pathTree.subDirs)
         .map(([dirName, dir]) => createDirectoryNode(dirName, dir, level));
     }
@@ -167,6 +171,8 @@
     /**
      * 
      * @param {Array<File>} files 
+     * @param {number} level
+     * @returns {Array<DocumentFragment>}
      */
     function buildFileNodes(files, level) {
       return files
@@ -180,7 +186,19 @@
         });
     }
 
+    /**
+     * 
+     * @param {string} dirName 
+     * @param {Directory} dir 
+     * @param {number} level 
+     * @returns {DocumentFragment}
+     */
     function createDirectoryNode(dirName, dir, level) {
+      if (onlyChildIsSingleSubdir(dir)) {
+        const [subDirName, subDir] = Object.entries(dir.subDirs)[0];
+        return createDirectoryNode(`${dirName}/${subDirName}`, subDir, level);
+      }
+
       const dirNode = document.createRange().createContextualFragment(
         dirNodeTemplate
           .replaceAll('{{dirName}}', dirName)
