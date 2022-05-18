@@ -1,3 +1,5 @@
+const test = require('test')
+
 (function () {
   /** @type {Set<HTMLElement>} */
   const hiddenElements = new Set();
@@ -5,6 +7,7 @@
   // Includes processed by grunt-include-replace.
   var cssTemplate = '<style>@@include("style.min.css")</style>';
   var formTemplate = '@@include("../temp/html/form.html")';
+  var viewedTemplate = '@@include("../temp/html/viewed.html")';
 
   // If not already done, attach the CSS to the head and the overlay markup to the body.
   /** @type {HTMLDivElement} */
@@ -13,6 +16,7 @@
     appendStyles();
     appendFilterForm();
     addFormListeners();
+    appendViewedCheckboxes();
 
     /** @type {HTMLInputElement} */
     const txtFilter = document.querySelector('#gdf-hide-input');
@@ -51,6 +55,22 @@
       btnShowAll.addEventListener('click', showAll);
       btnClose.addEventListener('click', function () {
         gdf.hidden = true;
+      });
+    }
+
+    /**
+     * 
+     */
+    function appendViewedCheckboxes() {
+      document.querySelectorAll('.file-info').forEach(el => {
+        el.after(
+          document.createRange().createContextualFragment(viewedTemplate)
+        );
+      });
+      document.querySelector('.js-diff-progressive-container').addEventListener('change', (event) => {
+        if (event.target.classList.contains('js-reviewed-checkbox')) {
+          event.target.parentElement.previousSibling.querySelector("button")?.click();
+        }
       });
     }
 
