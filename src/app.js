@@ -1,3 +1,22 @@
+/**
+ * @typedef {Object} PathInfo
+ * @property {string} fullName
+ * @property {string} fileName
+ * @property {Array<string>} folders
+ */
+
+/**
+ * @typedef {Object} Directory
+ * @property {Array<File>} files
+ * @property {Record<string, Directory>} subDirs
+ */
+
+/**
+ * @typedef {Object} File
+ * @property {string} fullName
+ * @property {string} fileName
+ */
+
 (function () {
   /** @type {Set<HTMLElement>} */
   const hiddenElements = new Set();
@@ -8,6 +27,8 @@
   var viewedTemplate = '@@include("../temp/html/viewed.html")';
   var pathTemplate = '@@include("../temp/html/path.html")';
   var fileTreeTemplate = '@@include("../temp/html/fileTree.html")';
+  var dirNodeTemplate = '@@include("../temp/html/directoryNode.html")';
+  var fileNodeTemplate = '@@include("../temp/html/fileNode.html")';
 
   // If not already done, attach the CSS to the head and the overlay markup to the body.
   /** @type {HTMLDivElement} */
@@ -68,7 +89,7 @@
             const container = event.target.closest("[data-details-container-group]")
             const isOpen = container.classList.contains("open");
             if (isOpen === event.target.checked) {
-                container.querySelector('.file-header .file-info button')?.click();
+              container.querySelector('.file-header .file-info button')?.click();
             }
           }
         }));
@@ -117,9 +138,69 @@
         'Layout--sidebarPosition-start',
         'Layout--sidebarPosition-flowRow-none'
       );
+      filesContainer.querySelector('ul').append(
+        ...buildFileTreeView()
+      )
       // Move all children from first js-diff-progressive-container to second to resolve styling issues
       const diffContainers = document.querySelectorAll('.js-diff-progressive-container');
-      diffContainers[1].replaceChildren(...diffContainers[0].childNodes, ...diffContainers[1].childNodes);
+      if (diffContainers.length > 1) {
+        diffContainers[1].replaceChildren(...diffContainers[0].childNodes, ...diffContainers[1].childNodes);
+      }
+    }
+
+    function buildFileTreeView() {
+      debugger;
+      const pathTree = getPathTree();
+      return buildDirectoryNodes(pathTree);
+    }
+
+    /**
+     * 
+     * @param {Directory} pathTree 
+     * @param {string?} [prefix=]
+     */
+    function buildDirectoryNodes(pathTree, prefix) {
+      prefix ??= '';
+      return Object.entries(pathTree.subDirs)
+        .map(([dirName, dir]) => createDirectoryNode(dirName, dir));
+    }
+
+    /**
+     * 
+     * @param {Array<File>} files 
+     */
+    function buildFileNodes(files) {
+      return files
+        .map(({ fullName, fileName }) => {
+          return document.createRange().createContextualFragment(
+            fileNodeTemplate
+              .replace('{{fullName}}', fullName)
+              .replace('{{fileName}}', fileName)
+          );
+        });
+    }
+
+    function createDirectoryNode(dirName, dir) {
+      const dirNode = document.createRange().createContextualFragment(
+        dirNodeTemplate.replace('{{dirName}}', dirName)
+      );
+      dirNode.querySelector('ul').append(
+        ...buildDirectoryNodes(dir)
+      );
+      dirNode.querySelector('ul').append(
+        ...buildFileNodes(dir.files)
+      );
+      return dirNode;
+    }
+
+    /**
+     * 
+     * @param {Directory} dir 
+     * @returns 
+     */
+    function onlyChildIsSingleSubdir(dir) {
+      return (dir.files.length === 0) &&
+        (Object.keys(dir.subDirs).length === 1);
     }
 
     // Create the function that hides files.
@@ -243,6 +324,51 @@
           .map(path => path.split('/')[0])
       )]
         .map(path => path + "/*");
+    }
+
+    function getPathTree() {
+      return [...document.querySelectorAll('[data-tagsearch-path]')]
+        .map(el => el.attributes['data-tagsearch-path'].value)
+        .map(path => ({
+          fullName: path,
+          fileName: path.split('/').slice(-1)[0],
+          folders: path.split('/').slice(0, -1)
+        }))
+        .reduce(addToTree, emptyDir());
+    }
+
+    /**
+     * 
+     * @param {Directory} tree 
+     * @param {PathInfo} pathInfo 
+     * @returns 
+     */
+    function addToTree(tree, pathInfo) {
+      let parentDir = tree;
+      pathInfo.folders.forEach(name => {
+        let dir = parentDir.subDirs[name];
+        if (!dir) {
+          dir = parentDir.subDirs[name] = emptyDir();
+        }
+        parentDir = dir;
+      });
+      const { fullName, fileName } = pathInfo;
+      parentDir.files.push({
+        fullName,
+        fileName
+      });
+      return tree;
+    }
+
+    /**
+     * 
+     * @returns {Directory}
+     */
+    function emptyDir() {
+      return {
+        files: [],
+        subDirs: {}
+      };
     }
 
     /**
