@@ -12,8 +12,7 @@
   if (!gdf) {
     appendStyles();
     appendFilterForm();
-    appendViewedCheckboxes();
-    appendPathFilters();
+    addFormListeners();
 
     /** @type {HTMLInputElement} */
     const txtFilter = document.querySelector('#gdf-hide-input');
@@ -24,12 +23,18 @@
     /** @type {HTMLAnchorElement} */
     const btnClose = document.querySelector('#gdf-close-btn');
 
+    /**
+     * 
+     */
     function appendStyles() {
       document.head.append(
         document.createRange().createContextualFragment(cssTemplate)
       );
     }
 
+    /**
+     * 
+     */
     function appendFilterForm() {
       document.querySelector('.toc-diff-stats').append(
         document.createRange().createContextualFragment(formTemplate)
@@ -37,6 +42,32 @@
       gdf = document.querySelector("#gdf");
     }
 
+    /**
+     * 
+     */
+    function addFormListeners() {
+      btnHide.addEventListener('click', applyFilter);
+      txtFilter.addEventListener('keyup', filterOnEnter);
+      btnShowAll.addEventListener('click', showAll);
+      btnClose.addEventListener('click', function () {
+        gdf.hidden = true;
+      });
+    }
+
+    // Create the function that hides files.
+    /**
+     * 
+     * @param {KeyboardEvent} event 
+     */
+    function filterOnEnter(event) {
+      if (event.key === 'Enter') {
+        applyFilter();
+      }
+    }
+
+    /**
+     * 
+     */
     function applyFilter() {
       var query = txtFilter.value;
 
@@ -54,56 +85,72 @@
      * @param {string} path 
      */
     function filterPath(path) {
-      hideTableOfContentsEntry(path);
-      hideDiffEntry(path);
+      const replacementPattern = toRegex(path);
+      hideTableOfContentsEntry(replacementPattern);
+      hideDiffEntry(replacementPattern);
       updateCounts();
     }
 
     /**
      * 
-     * @param {string} path 
+     * @param {string} pattern 
      */
-    function hideTableOfContentsEntry(path) {
+    function hideTableOfContentsEntry(pattern) {
       [...document.querySelectorAll('#toc a[href^="#diff"]')]
-        .filter(el => el.textContent.match(path))
+        .filter(el => el.textContent.match(pattern))
         .map(el => el.closest('li'))
         .forEach(hide)
     }
 
     /**
      * 
-     * @param {string} path 
+     * @param {string} pattern 
      */
-    function hideDiffEntry(path) {
+    function hideDiffEntry(pattern) {
       [...document.querySelectorAll(`[data-tagsearch-path]`)]
-        .filter(el => el.attributes['data-tagsearch-path']?.value.match(path))
+        .filter(el => el.attributes['data-tagsearch-path']?.value.match(pattern))
         .forEach(hide)
+    }
+
+    function updateCounts() {
+      const fileCount = document.querySelectorAll(`[data-tagsearch-path]:not([hidden])`).length;
+      const statsButton = document.querySelector('.toc-diff-stats>button');
+      statsButton.textContent = `${fileCount} changed files`
     }
 
     /**
      * 
-     * @param {HTMLElement} element 
+     * @param {string} wildcardPattern 
+     * @returns 
      */
-    function hide(element) {
-      if (!hiddenElements.has(element)) {
-        element.hidden = true;
-        hiddenElements.add(element);
+    function toRegex(wildcardPattern) {
+      const regexPattern = wildcardPattern
+        // Replace everything but wildcards (*)
+        .replace(/[-\/\\^$+?.()|[\]{}]/g, '\\$&')
+        .replace(/\*/g, ".*")
+        .replace(/\*/g, ".*")
+      return `^${regexPattern}$`;
+    }
+
+    /**
+     * 
+     * @param {HTMLElement} el 
+     */
+    function hide(el) {
+      if (!hiddenElements.has(el)) {
+        el.hidden = true;
+        hiddenElements.add(el);
       }
     }
 
+    /**
+     * 
+     */
     function showAll() {
       hiddenElements.forEach(el => el.hidden = false)
       hiddenElements.clear();
       btnShowAll.disabled = true;
     };
-
-    btnHide.addEventListener('click', applyFilter);
-    txtFilter.addEventListener('keyup', (event) => (event.key === 'Enter') && applyFilter());
-    btnShowAll.addEventListener('click', showAll);
-    btnClose.addEventListener('click', function () {
-      gdf.hidden = true;
-    });
   }
-  
   gdf.hidden = true;
 })();
