@@ -1,14 +1,9 @@
-<li id="file-tree-item-diff-5328ef2ffd2cdbddc3e660a660a1b1cfc23796ef40179a366e395a9cbbab3aa3"
-    class="ActionList-item ActionList-item--subItem js-tree-node" role="treeitem" aria-level="{{level}}"
+<li class="ActionList-item ActionList-item--subItem js-tree-node" role="treeitem" aria-level="{{level}}"
     style="--ActionList-tree-depth: {{level}}"
-    data-action="click:action-list#handleItemClick click:file-tree#instrumentSelectFile"
-    data-target="file-tree.fileTreeNode" data-targets="
-diff-file-filter.treeEntries
-file-tree.fileTreeNodes
-" data-file-type=".ts" data-file-deleted="false" data-tree-entry-type="file">
+    data-tree-entry-type="file">
     <span data-filterable-item-text="" hidden="">{{fullName}}</span>
-    <a class="ActionList-content hx_ActionList-content"
-        href="#diff-5328ef2ffd2cdbddc3e660a660a1b1cfc23796ef40179a366e395a9cbbab3aa3" data-turbo="false" tabindex="-1">
+    <a class="ActionList-content hx_ActionList-content gdf-tree-row"
+        href="{{href}}" data-turbo="false" tabindex="-1">
         <span class="ActionList-item-visual ActionList-item-visual--leading hx_ActionList-item-visual">
             <svg aria-label="File" aria-hidden="true" height="16" viewBox="0 0 16 16" version="1.1" width="16"
                 data-view-component="true" class="octicon octicon-file color-fg-muted">
@@ -18,11 +13,11 @@ file-tree.fileTreeNodes
         <span class="ActionList-item-label ActionList-item-label--truncate hx_ActionList-item-label">
             {{fileName}}
         </span>
-        <span class="ActionList-item-visual ActionList-item-visual--trailing hx_ActionList-item-visual">
-            <svg title="modified" aria-hidden="true" height="16" viewBox="0 0 16 16" version="1.1" width="16"
-                data-view-component="true" class="octicon octicon-diff-modified color-fg-attention">
-                <use href="#octicon_diff-modified_16"></use>
-            </svg>
-        </span>
     </a>
+    <input
+        type="checkbox"
+        class="gdf-tree-checkbox"
+        data-fullname="{{fullName}}"
+        checked
+    />
 </li>

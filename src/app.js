@@ -1,5 +1,6 @@
 /**
  * @typedef {Object} PathInfo
+ * @property {string} href
  * @property {string} fullName
  * @property {string} fileName
  * @property {Array<string>} folders
@@ -7,6 +8,7 @@
 
 /**
  * @typedef {Object} Directory
+ * @property {string} fullName
  * @property {Array<File>} files
  * @property {Record<string, Directory>} subDirs
  */
@@ -15,11 +17,13 @@
  * @typedef {Object} File
  * @property {string} fullName
  * @property {string} fileName
+ * @property {string} href
  */
 
 (function () {
   /** @type {Set<HTMLElement>} */
   const hiddenElements = new Set();
+  let updatingTree = false;
 
   // Includes processed by grunt-include-replace.
   var cssTemplate = '<style>@@include("style.min.css")</style>';
@@ -39,10 +43,12 @@
     /** @type {HTMLButtonElement} */
     let btnShowAll;
 
+    let updatingTree = false;
+
     appendStyles();
-    appendFilterForm();
+    // appendFilterForm();
     appendViewedCheckboxes();
-    appendPathFilters();
+    // appendPathFilters();
     appendFileTree();
 
     /**
@@ -141,10 +147,76 @@
       filesContainer.querySelector('ul').append(
         ...buildFileTreeView()
       )
+      filesContainer.addEventListener('change', toggleTreeNode);
       // Move all children from first js-diff-progressive-container to second to resolve styling issues
       const diffContainers = document.querySelectorAll('.js-diff-progressive-container');
       if (diffContainers.length > 1) {
         diffContainers[1].replaceChildren(...diffContainers[0].childNodes, ...diffContainers[1].childNodes);
+      } else {
+        diffContainers[0].before(document.createRange().createContextualFragment(
+          '<div class="js-diff-progressive-container"></div>'
+        ))
+      }
+    }
+
+    /**
+     * 
+     * @param {Event} event 
+     */
+    function toggleTreeNode(event) {
+      if (!updatingTree) {
+        /** @type {HTMLInputElement} */
+        const checkbox = event.target;
+        toggleAssociatedPath(checkbox);
+        toggleDescendents(checkbox);
+        toggleAncestors(checkbox);
+        updatingTree = false;
+      }
+    }
+
+    /**
+     * 
+     * @param {HTMLInputElement} checkbox 
+     */
+    function toggleAssociatedPath(checkbox) {
+      const path = checkbox.dataset.fullname;
+      if (checkbox.checked) {
+        unfilterPath(path);
+      } else {
+        filterPath(path);
+      }
+    }
+
+    /**
+     * 
+     * @param {HTMLInputElement} checkbox 
+     */
+    function toggleDescendents(checkbox) {
+      const children = checkbox.parentNode
+        .querySelector('ul')
+        ?.querySelectorAll('input[type="checkbox"]')
+        .forEach(it => it.checked = checkbox.checked);
+    }
+
+    /**
+     * 
+     * @param {HTMLInputElement} checkbox 
+     */
+    function toggleAncestors(checkbox) {
+      const parentRow = checkbox.parentNode.parentNode.closest("#gdf-tree li");
+      if (parentRow) {
+        const descendentCheckboxes = [...parentRow.querySelector("ul").querySelectorAll("input")];
+        const numChecked = descendentCheckboxes.filter(it => it.checked).length;
+        const allSame = [0, descendentCheckboxes.length].includes(numChecked);
+        const parentRowCheckbox = [...parentRow.childNodes].filter(it => it.nodeName === "INPUT")[0];
+        if (allSame) {
+          parentRowCheckbox.checked = checkbox.checked;
+          parentRowCheckbox.indeterminate = false;
+        } else {
+          parentRowCheckbox.checked = false;
+          parentRowCheckbox.indeterminate = true;
+        }
+        toggleAncestors(parentRowCheckbox);
       }
     }
 
@@ -176,11 +248,12 @@
      */
     function buildFileNodes(files, level) {
       return files
-        .map(({ fullName, fileName }) => {
+        .map(({ fullName, fileName, href }) => {
           return document.createRange().createContextualFragment(
             fileNodeTemplate
               .replaceAll('{{fullName}}', fullName)
               .replaceAll('{{fileName}}', fileName)
+              .replaceAll('{{href}}', href)
               .replaceAll('{{level}}', level)
           );
         });
@@ -203,6 +276,7 @@
         dirNodeTemplate
           .replaceAll('{{dirName}}', dirName)
           .replaceAll('{{level}}', level)
+          .replaceAll('{{fullName}}', dir.fullName)
       );
       dirNode.querySelector('ul').append(
         ...buildDirectoryNodes(dir, level + 1)
@@ -348,13 +422,17 @@
 
     function getPathTree() {
       return [...document.querySelectorAll('[data-tagsearch-path]')]
-        .map(el => el.attributes['data-tagsearch-path'].value)
-        .map(path => ({
+        .map(el => ({
+          href: el.querySelector('a.Link--primary').href,
+          path: el.attributes['data-tagsearch-path'].value
+        }))
+        .map(({ path, href }) => ({
+          href: href,
           fullName: path,
           fileName: path.split('/').slice(-1)[0],
           folders: path.split('/').slice(0, -1)
         }))
-        .reduce(addToTree, emptyDir());
+        .reduce(addToTree, emptyDir(''));
     }
 
     /**
@@ -366,16 +444,18 @@
     function addToTree(tree, pathInfo) {
       let parentDir = tree;
       pathInfo.folders.forEach(name => {
+        const fullName = (parentDir.fullName ? `${parentDir.fullName}/${name}` : name);
         let dir = parentDir.subDirs[name];
         if (!dir) {
-          dir = parentDir.subDirs[name] = emptyDir();
+          dir = parentDir.subDirs[name] = emptyDir(fullName);
         }
         parentDir = dir;
       });
-      const { fullName, fileName } = pathInfo;
+      const { fullName, fileName, href } = pathInfo;
       parentDir.files.push({
         fullName,
-        fileName
+        fileName,
+        href
       });
       return tree;
     }
@@ -384,8 +464,9 @@
      * 
      * @returns {Directory}
      */
-    function emptyDir() {
+    function emptyDir(fullName) {
       return {
+        fullName,
         files: [],
         subDirs: {}
       };

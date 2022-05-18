@@ -13,22 +13,24 @@
     background: rgba(0, 0, 0, 0.6);
     box-shadow: -4px 5px 0 0 rgba(0, 0, 0, 0.2);
     text-shadow: none;
-    
+
     &-title {
         margin-bottom: 8px;
         color: #FFF;
         font-size: 2em;
     }
+
     & label {
         color: #EEE;
     }
+
     &-hide-input {
         width: 100px;
         min-height: 26px;
         padding: 3px 8px;
         margin-top: 4px;
     }
-    
+
     &-hide-btn {
         margin-top: 4px;
     }
@@ -50,5 +52,26 @@
         float: right;
         color: #7FB8E6;
         cursor: pointer;
+    }
+}
+
+#gdf-tree {
+    .gdf-tree-node {
+        display: grid;
+        grid-template-columns: minmax(0, auto) min-content;
+        grid-template-rows: 20px;
+        align-items: center;
+        justify-items: center;
+        padding: 6px 8px;
+    }
+
+    .gdf-tree-checkbox {
+        position: absolute;
+        right: 0px;
+        top: 10px;
+    }
+
+    .gdf-tree-row {
+        width: calc(100% - 16px);
     }
 }
