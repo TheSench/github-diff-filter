@@ -184,7 +184,16 @@
         unfilterPath(path);
       } else {
         filterPath(path);
+        foldTree(checkbox);
       }
+    }
+
+    /**
+     * 
+     * @param {HTMLInputElement} checkbox 
+     */
+    function foldTree(checkbox) {
+      checkbox.parentNode.querySelector('button')?.click();
     }
 
     /**
