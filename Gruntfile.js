@@ -49,7 +49,10 @@ module.exports = function(grunt) {
     uglify: {
       dist: {
         options: {
-          banner: 'javascript:'
+          banner: 'javascript:',
+          // mangle: false,
+          // compress: false,
+          // beautify: true
         },
         files: {
           'dist/<%= pkg.name %>.min.js': ['temp/js/src/app.js']
