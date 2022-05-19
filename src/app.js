@@ -361,6 +361,9 @@
         .forEach(hide)
     }
 
+    /**
+     * 
+     */
     function updateCounts() {
       const fileCount = document.querySelectorAll(`[data-tagsearch-path]:not([hidden])`).length;
       const statsButton = document.querySelector('.toc-diff-stats>button');
@@ -391,6 +394,10 @@
       return `^${regexPattern}$`;
     }
 
+    /**
+     * 
+     * @returns 
+     */
     function getPathTree() {
       return [...document.querySelectorAll('[data-tagsearch-path]')]
         .map(el => ({
