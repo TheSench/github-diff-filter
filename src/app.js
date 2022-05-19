@@ -235,7 +235,10 @@
      */
     function buildFileTreeView() {
       const pathTree = getPathTree();
-      return buildDirectoryNodes(pathTree, 1);
+      return [
+        ...buildDirectoryNodes(pathTree, 1),
+        ...buildFileNodes(pathTree.files, 1)
+      ];
     }
 
     /**
