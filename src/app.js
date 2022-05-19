@@ -21,24 +21,22 @@
  */
 
 (function () {
-  /** @type {Set<HTMLElement>} */
-  const hiddenElements = new Set();
-  let updatingTree = false;
-
-  // Includes processed by grunt-include-replace.
-  var cssTemplate = '<style>@@include("style.min.css")</style>';
-  var viewedTemplate = '@@include("../temp/html/viewed.html")';
-  var fileTreeTemplate = '@@include("../temp/html/fileTree.html")';
-  var dirNodeTemplate = '@@include("../temp/html/directoryNode.html")';
-  var fileNodeTemplate = '@@include("../temp/html/fileNode.html")';
-
   // Only attach once
   if (!document.querySelector('#gdf-tree')) {
+
+    // Includes processed by grunt-include-replace.
+    var cssTemplate = '<style>@@include("style.min.css")</style>';
+    var viewedTemplate = '@@include("../temp/html/viewed.html")';
+    var fileTreeTemplate = '@@include("../temp/html/fileTree.html")';
+    var dirNodeTemplate = '@@include("../temp/html/directoryNode.html")';
+    var fileNodeTemplate = '@@include("../temp/html/fileNode.html")';
     /** @type {HTMLInputElement} */
     let txtFilter;
     /** @type {HTMLButtonElement} */
     let btnShowAll;
 
+    /** @type {Set<HTMLElement>} */
+    const hiddenElements = new Set();
     let updatingTree = false;
 
     appendStyles();
