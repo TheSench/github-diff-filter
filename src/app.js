@@ -140,7 +140,10 @@
      * @param {HTMLInputElement} checkbox 
      */
     function foldTree(checkbox) {
-      checkbox.parentNode.querySelector('button')?.click();
+      const button = checkbox.parentNode.querySelector('button');
+      if (button.ariaExpanded === 'true') {
+        button.click();
+      }
     }
 
     /**
