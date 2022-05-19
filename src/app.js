@@ -29,7 +29,6 @@
   var cssTemplate = '<style>@@include("style.min.css")</style>';
   var formTemplate = '@@include("../temp/html/form.html")';
   var viewedTemplate = '@@include("../temp/html/viewed.html")';
-  var pathTemplate = '@@include("../temp/html/path.html")';
   var fileTreeTemplate = '@@include("../temp/html/fileTree.html")';
   var dirNodeTemplate = '@@include("../temp/html/directoryNode.html")';
   var fileNodeTemplate = '@@include("../temp/html/fileNode.html")';
@@ -48,7 +47,6 @@
     appendStyles();
     // appendFilterForm();
     appendViewedCheckboxes();
-    // appendPathFilters();
     appendFileTree();
 
     /**
@@ -99,32 +97,6 @@
             }
           }
         }));
-    }
-
-    /**
-     * 
-     */
-    function appendPathFilters() {
-      const list = document.createElement('ul');
-      getRootPaths().forEach(path => {
-        list.append(
-          document.createRange().createContextualFragment(pathTemplate.replaceAll('{{Path}}', path))
-        );
-      });
-      document.querySelector('#toc').after(list);
-      list.addEventListener("click", event => {
-        if (event.target.nodeName === 'LABELS') {
-          event.target.querySelector('input').click();
-        }
-      });
-      list.addEventListener('change', (event) => {
-        const path = event.target.value;
-        if (event.target.checked) {
-          unfilterPath(path);
-        } else {
-          filterPath(path);
-        }
-      });
     }
 
     /**
@@ -417,19 +389,6 @@
         .replace(/\*/g, ".*")
         .replace(/\*/g, ".*")
       return `^${regexPattern}$`;
-    }
-
-    /**
-     * 
-     * @returns 
-     */
-    function getRootPaths() {
-      return [...new Set(
-        [...document.querySelectorAll('[data-tagsearch-path]')]
-          .map(el => el.attributes['data-tagsearch-path'].value)
-          .map(path => path.split('/')[0])
-      )]
-        .map(path => path + "/*");
     }
 
     function getPathTree() {
