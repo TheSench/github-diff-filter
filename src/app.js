@@ -141,7 +141,7 @@
      */
     function foldTree(checkbox) {
       const button = checkbox.parentNode.querySelector('button');
-      if (button.ariaExpanded === 'true') {
+      if (button?.ariaExpanded === 'true') {
         button.click();
       }
     }
