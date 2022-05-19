@@ -103,6 +103,7 @@
           '<div class="js-diff-progressive-container"></div>'
         ))
       }
+      sortDiffContainers();
     }
 
     /**
@@ -173,6 +174,20 @@
         }
         toggleAncestors(parentRowCheckbox);
       }
+    }
+
+    /**
+     * 
+     */
+    function sortDiffContainers() {
+      const diffContainers = [...document.querySelectorAll('[data-tagsearch-path]')];
+      diffContainers.sort((a, b) => {
+        const pathA = a.attributes['data-tagsearch-path'].value;
+        const pathB = b.attributes['data-tagsearch-path'].value;
+        return pathA.localeCompare(pathB);
+      });
+      document.querySelector('.js-diff-progressive-container:last-child')
+        .replaceChildren(...diffContainers);
     }
 
     /**
