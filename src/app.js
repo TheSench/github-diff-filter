@@ -27,16 +27,13 @@
 
   // Includes processed by grunt-include-replace.
   var cssTemplate = '<style>@@include("style.min.css")</style>';
-  var formTemplate = '@@include("../temp/html/form.html")';
   var viewedTemplate = '@@include("../temp/html/viewed.html")';
   var fileTreeTemplate = '@@include("../temp/html/fileTree.html")';
   var dirNodeTemplate = '@@include("../temp/html/directoryNode.html")';
   var fileNodeTemplate = '@@include("../temp/html/fileNode.html")';
 
-  // If not already done, attach the CSS to the head and the overlay markup to the body.
-  /** @type {HTMLDivElement} */
-  let gdf = document.querySelector('#gdf');
-  if (!gdf) {
+  // Only attach once
+  if (!document.querySelector('#gdf-tree')) {
     /** @type {HTMLInputElement} */
     let txtFilter;
     /** @type {HTMLButtonElement} */
@@ -45,7 +42,6 @@
     let updatingTree = false;
 
     appendStyles();
-    // appendFilterForm();
     appendViewedCheckboxes();
     appendFileTree();
 
@@ -56,26 +52,6 @@
       document.head.append(
         document.createRange().createContextualFragment(cssTemplate)
       );
-    }
-
-    /**
-     * 
-     */
-    function appendFilterForm() {
-      document.querySelector('.toc-diff-stats').append(
-        document.createRange().createContextualFragment(formTemplate)
-      );
-      gdf = document.querySelector("#gdf");
-      document.querySelector('#gdf-hide-btn').addEventListener('click', applyFilter);
-      document.querySelector('#gdf-close-btn').addEventListener('click', function () {
-        gdf.hidden = true;
-      });
-
-      txtFilter = document.querySelector('#gdf-hide-input');
-      txtFilter.addEventListener('keyup', filterOnEnter);
-
-      btnShowAll = document.querySelector('#gdf-show-all-btn');
-      btnShowAll.addEventListener('click', showAll);
     }
 
     /**
@@ -471,15 +447,5 @@
         hiddenElements.delete(el);
       }
     }
-
-    /**
-     * 
-     */
-    function showAll() {
-      hiddenElements.forEach(el => el.hidden = false)
-      hiddenElements.clear();
-      btnShowAll.disabled = true;
-    };
   }
-  gdf.hidden = true;
 })();
