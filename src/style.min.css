@@ -1,1 +1,0 @@
-#gdf-tree .gdf-tree-node{display:grid;grid-template-columns:minmax(0, auto) min-content;grid-template-rows:20px;align-items:center;justify-items:center;padding:6px 8px}#gdf-tree .gdf-tree-checkbox{position:absolute;right:0px;top:10px}#gdf-tree .gdf-tree-row{width:calc(100% - 16px)}
