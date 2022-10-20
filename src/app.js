@@ -30,13 +30,11 @@
     var fileTreeTemplate = '@@include("../temp/html/fileTree.html")';
     var dirNodeTemplate = '@@include("../temp/html/directoryNode.html")';
     var fileNodeTemplate = '@@include("../temp/html/fileNode.html")';
-    /** @type {HTMLInputElement} */
-    let txtFilter;
-    /** @type {HTMLButtonElement} */
-    let btnShowAll;
 
     /** @type {Set<HTMLElement>} */
     const hiddenElements = new Set();
+    const excludedElements = new Set();
+    const notIncludedElements = new Set();
     let updatingTree = false;
 
     appendStyles();
@@ -50,6 +48,36 @@
       document.head.append(
         document.createRange().createContextualFragment(cssTemplate)
       );
+    }
+
+    function applyInclusions({ target: txtIncludedFiles }) {
+      const filter = getTextFilter(txtIncludedFiles.value);
+      const oldFilter = txtIncludedFiles.oldValue;
+      txtIncludedFiles.oldValue = filter;
+      if (filter) {
+        filterPath('*', notIncludedElements, true);
+        unfilterPath(filter, notIncludedElements, true);
+      } else if (oldFilter) {
+        unfilterPath('*', notIncludedElements, true);
+      }
+    }
+
+    function applyExclusions({ target: txtExcludedFiles }) {
+      const filter = getTextFilter(txtExcludedFiles.value);
+      const oldFilter = txtExcludedFiles.oldValue;
+      txtExcludedFiles.oldValue = filter;
+      if (oldFilter) {
+        unfilterPath(oldFilter, excludedElements, true);
+      }
+      if (filter) {
+        filterPath(filter, excludedElements, true);
+      }
+    }
+
+    function getTextFilter(text) {
+      return (text
+        ? text.split(',').map(part => `${part}(/*)?`).join(',')
+        : '');
     }
 
     /**
@@ -104,6 +132,11 @@
         ))
       }
       sortDiffContainers();
+
+      document.querySelector('#included-files')
+        .addEventListener('input', debounce(applyInclusions, 200));
+      document.querySelector('#excluded-files')
+        .addEventListener('input', debounce(applyExclusions, 200));
     }
 
     /**
@@ -111,7 +144,7 @@
      * @param {Event} event 
      */
     function toggleTreeNode(event) {
-      if (!updatingTree) {
+      if (!updatingTree && event.target.type === 'checkbox') {
         /** @type {HTMLInputElement} */
         const checkbox = event.target;
         toggleAssociatedPath(checkbox);
@@ -128,9 +161,9 @@
     function toggleAssociatedPath(checkbox) {
       const path = checkbox.dataset.fullname;
       if (checkbox.checked) {
-        unfilterPath(path);
+        unfilterPath(path, hiddenElements);
       } else {
-        filterPath(path);
+        filterPath(path, hiddenElements);
         foldTree(checkbox);
       }
     }
@@ -293,40 +326,15 @@
         (Object.keys(dir.subDirs).length === 1);
     }
 
-    // Create the function that hides files.
-    /**
-     * 
-     * @param {KeyboardEvent} event 
-     */
-    function filterOnEnter(event) {
-      if (event.key === 'Enter') {
-        applyFilter();
-      }
-    }
-
-    /**
-     * 
-     */
-    function applyFilter() {
-      var query = txtFilter.value;
-
-      if (query !== '') {
-        query.split(',').forEach(filterPath);
-
-        btnShowAll.disabled = false;
-        txtFilter.value = '';
-        txtFilter.focus();
-      }
-    };
-
     /**
      * 
      * @param {string} path 
      */
-    function filterPath(path) {
-      const replacementPattern = toRegex(path);
-      hideTableOfContentsEntry(replacementPattern);
-      hideDiffEntry(replacementPattern);
+    function filterPath(path, hiddenSet, adjustTree) {
+      const replacementPattern = toMultiRegex(path);
+      hideTableOfContentsEntry(replacementPattern, hiddenSet);
+      hideDiffEntry(replacementPattern, hiddenSet);
+      if (adjustTree) hideTreeEntry(replacementPattern, hiddenSet);
       updateCounts();
     }
 
@@ -334,10 +342,11 @@
      * 
      * @param {string} path 
      */
-    function unfilterPath(path) {
-      const replacementPattern = toRegex(path);
-      showTableOfContentsEntry(replacementPattern);
-      showDiffEntry(replacementPattern);
+    function unfilterPath(path, hiddenSet, adjustTree) {
+      const replacementPattern = toMultiRegex(path);
+      showTableOfContentsEntry(replacementPattern, hiddenSet);
+      showDiffEntry(replacementPattern, hiddenSet);
+      if (adjustTree) showTreeEntry(replacementPattern, hiddenSet);
       updateCounts();
     }
 
@@ -345,51 +354,89 @@
      * 
      * @param {string} pattern 
      */
-    function hideTableOfContentsEntry(pattern) {
+    function hideTableOfContentsEntry(pattern, hiddenSet) {
       [...document.querySelectorAll('#toc a[href^="#diff"]')]
         .filter(el => el.textContent.match(pattern))
         .map(el => el.closest('li'))
-        .forEach(hide)
+        .forEach(el => hide(el, hiddenSet));
     }
 
     /**
      * 
      * @param {string} pattern 
      */
-    function showTableOfContentsEntry(pattern) {
+    function showTableOfContentsEntry(pattern, hiddenSet) {
       [...document.querySelectorAll('#toc a[href^="#diff"]')]
         .filter(el => el.textContent.match(pattern))
         .map(el => el.closest('li'))
-        .forEach(show)
+        .forEach(el => show(el, hiddenSet));
     }
 
     /**
      * 
      * @param {string} pattern 
      */
-    function hideDiffEntry(pattern) {
+    function hideDiffEntry(pattern, hiddenSet) {
       [...document.querySelectorAll(`[data-tagsearch-path]`)]
         .filter(el => el.attributes['data-tagsearch-path']?.value.match(pattern))
-        .forEach(hide)
+        .forEach(el => hide(el, hiddenSet));
+    }
+
+    /**
+     * 
+     * @param {string} pattern 
+     */
+    function showDiffEntry(pattern, hiddenSet) {
+      [...document.querySelectorAll(`[data-tagsearch-path]`)]
+        .filter(el => el.attributes['data-tagsearch-path']?.value.match(pattern))
+        .forEach(el => show(el, hiddenSet));
+    }
+
+    function hideTreeEntry(pattern, hiddenSet) {
+      [...document.querySelectorAll('file-tree [title]')]
+        .filter(el => el.title.match(pattern))
+        .map(el => el.closest('li'))
+        .forEach(el => hide(el, hiddenSet));
+    }
+
+    function showTreeEntry(pattern, hiddenSet) {
+      [...document.querySelectorAll('file-tree [title]')]
+        .filter(el => el.title.match(pattern))
+        .map(el => el.closest('li'))
+        .forEach(el => show(el, hiddenSet));
+      
     }
 
     /**
      * 
      */
     function updateCounts() {
-      const fileCount = document.querySelectorAll(`[data-tagsearch-path]:not([hidden])`).length;
+      const diffStats = document.querySelectorAll(`[data-tagsearch-path]:not([hidden]) .diffstat`)
+      const fileCount = diffStats.length;
+      // const additionsAndDeletions = getChanges(diffStats)
       const statsButton = document.querySelector('.toc-diff-stats>button');
       statsButton.textContent = `${fileCount} changed files`
     }
 
-    /**
-     * 
-     * @param {string} pattern 
-     */
-    function showDiffEntry(pattern) {
-      [...document.querySelectorAll(`[data-tagsearch-path]`)]
-        .filter(el => el.attributes['data-tagsearch-path']?.value.match(pattern))
-        .forEach(show)
+    // const diffStatRegex = /((?<additions>\d+) additions)?( & )?((?<deletions>\d+) deletions)?/
+    // /**
+    //  * @param {NodeListOf<Element>} diffStats
+    //  */
+    // function getChanges(diffStats) {
+    //   const changes = {
+    //     additions: 0,
+    //     deletions: 0
+    //   }
+    //   diffStats.forEach(el => {
+    //     const diffStat = el.ariaLabel
+    //     const matches = /
+    //   })
+    // }
+
+    function toMultiRegex(wildcardPattern) {
+      const regexParts = wildcardPattern.split(',')
+        .map(toRegex)
+      return `(${regexParts.join('|')})`
     }
 
     /**
@@ -399,10 +446,10 @@
      */
     function toRegex(wildcardPattern) {
       const regexPattern = wildcardPattern
-        // Replace everything but wildcards (*)
-        .replace(/[-\/\\^$+?.()|[\]{}]/g, '\\$&')
-        .replace(/\*/g, ".*")
-        .replace(/\*/g, ".*")
+        // Replace everything but wildcards (*, ?) and parenthesis
+        .replace(/[-\/\\^$+.|[\]{}]/g, '\\$&')
+        .replace(/\s+/g, '')
+        .replace(/\*/g, ".*");
       return `^${regexPattern}$`;
     }
 
@@ -466,10 +513,10 @@
      * 
      * @param {HTMLElement} el 
      */
-    function hide(el) {
-      if (!hiddenElements.has(el)) {
+    function hide(el, hiddenSet) {
+      if (!hiddenSet.has(el)) {
         el.hidden = true;
-        hiddenElements.add(el);
+        hiddenSet.add(el);
       }
     }
 
@@ -477,10 +524,22 @@
      * 
      * @param {HTMLElement} el 
      */
-    function show(el) {
-      if (hiddenElements.has(el)) {
-        el.hidden = false;
-        hiddenElements.delete(el);
+    function show(el, hiddenSet) {
+      if (hiddenSet.has(el)) {
+        hiddenSet.delete(el);
+        el.hidden = shouldMarkHidden(el);
+      }
+    }
+
+    function shouldMarkHidden(el) {
+        return hiddenElements.has(el) || excludedElements.has(el) || notIncludedElements.has(el);
+    }
+
+    function debounce(callback, ms) {
+      let timeout;
+      return function(...args) {
+        if (timeout) clearTimeout(timeout);
+        timeout = setTimeout(callback, ms, ...args);
       }
     }
   }

@@ -47,17 +47,26 @@
         </svg>
 
 
-        <!-- <div class="subnav-search mx-0 mb-2">
-            <input type="text" id="file-tree-filter-field" class="form-control input-block pl-5 js-filterable-field"
-                placeholder="Filter changed files" aria-label="Filter changed files" autocomplete="off"
-                data-target="diff-layout.fileTreePathFilter">
+        <div class="subnav-search mx-0 mb-2">
+            <input type="text" id="included-files" class="form-control input-block pl-5 js-filterable-field"
+                placeholder="Include changed files" aria-label="Filter changed files" autocomplete="off">
             <svg aria-hidden="true" height="16" viewBox="0 0 16 16" version="1.1" width="16" data-view-component="true"
                 class="octicon octicon-search subnav-search-icon">
                 <path fill-rule="evenodd"
                     d="M11.5 7a4.499 4.499 0 11-8.998 0A4.499 4.499 0 0111.5 7zm-.82 4.74a6 6 0 111.06-1.06l3.04 3.04a.75.75 0 11-1.06 1.06l-3.04-3.04z">
                 </path>
             </svg>
-        </div> -->
+        </div>
+        <div class="subnav-search mx-0 mb-2">
+            <input type="text" id="excluded-files" class="form-control input-block pl-5 js-filterable-field"
+                placeholder="Exclude changed files" aria-label="Filter changed files" autocomplete="off">
+            <svg aria-hidden="true" height="16" viewBox="0 0 16 16" version="1.1" width="16" data-view-component="true"
+                class="octicon octicon-search subnav-search-icon">
+                <path fill-rule="evenodd"
+                    d="M11.5 7a4.499 4.499 0 11-8.998 0A4.499 4.499 0 0111.5 7zm-.82 4.74a6 6 0 111.06-1.06l3.04 3.04a.75.75 0 11-1.06 1.06l-3.04-3.04z">
+                </path>
+            </svg>
+        </div>
         <action-list data-arrow-navigation="true" data-catalyst="">
             <file-tree data-target="diff-layout.fileTree" data-catalyst="">
                 <nav aria-label="File Tree Navigation">
