@@ -21,6 +21,7 @@
  */
 
 (function () {
+  const defaultExclusions = localStorage.getItem('defaultExclusions');
   // Only attach once
   if (!document.querySelector('#gdf-tree')) {
 
@@ -135,8 +136,10 @@
 
       document.querySelector('#included-files')
         .addEventListener('input', debounce(applyInclusions, 200));
-      document.querySelector('#excluded-files')
-        .addEventListener('input', debounce(applyExclusions, 200));
+      const excludedFiles = document.querySelector('#excluded-files')
+      excludedFiles.addEventListener('input', debounce(applyExclusions, 200));
+      excludedFiles.value = defaultExclusions;
+      if (defaultExclusions) applyExclusions({target: excludedFiles});
     }
 
     /**
