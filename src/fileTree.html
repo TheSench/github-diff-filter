@@ -49,19 +49,33 @@
 
         <div class="subnav-search mx-0 mb-2">
             <input type="text" id="included-files" class="form-control input-block pl-5 js-filterable-field"
-                placeholder="Include changed files" aria-label="Filter changed files" autocomplete="off">
+                placeholder="Include changed files" aria-label="Filter changed files" autocomplete="off"
+                style="width: calc(100% - 24px); display: inline;">
             <svg aria-hidden="true" height="16" viewBox="0 0 16 16" version="1.1" width="16" data-view-component="true"
                 class="octicon octicon-search subnav-search-icon">
                 <path fill-rule="evenodd" d="M.75 3a.75.75 0 000 1.5h14.5a.75.75 0 000-1.5H.75zM3 7.75A.75.75 0 013.75 7h8.5a.75.75 0 010 1.5h-8.5A.75.75 0 013 7.75zm3 4a.75.75 0 01.75-.75h2.5a.75.75 0 010 1.5h-2.5a.75.75 0 01-.75-.75z"></path>
             </svg>
+            <button class="filter-save-button" id="save-inclusions">
+                <svg aria-hidden="true" height="16" viewBox="0 0 16 16" version="1.1" width="16" data-view-component="true"
+                    class="octicon octicon-search subnav-search-icon" style="position: unset; display: inline;">
+                    <path fill-rule="evenodd" d="M4.75 2.5a.25.25 0 00-.25.25v9.91l3.023-2.489a.75.75 0 01.954 0l3.023 2.49V2.75a.25.25 0 00-.25-.25h-6.5zM3 2.75C3 1.784 3.784 1 4.75 1h6.5c.966 0 1.75.784 1.75 1.75v11.5a.75.75 0 01-1.227.579L8 11.722l-3.773 3.107A.75.75 0 013 14.25V2.75z"></path>
+                </svg>
+            </button>
         </div>
         <div class="subnav-search mx-0 mb-2">
             <input type="text" id="excluded-files" class="form-control input-block pl-5 js-filterable-field"
-                placeholder="Exclude changed files" aria-label="Filter changed files" autocomplete="off">
+                placeholder="Exclude changed files" aria-label="Filter changed files" autocomplete="off"
+                style="width: calc(100% - 24px); display: inline;">
             <svg aria-hidden="true" height="16" viewBox="0 0 16 16" version="1.1" width="16" data-view-component="true"
                 class="octicon octicon-search subnav-search-icon">
                 <path fill-rule="evenodd" d="M1.5 8a6.5 6.5 0 0110.535-5.096l-9.131 9.131A6.472 6.472 0 011.5 8zm2.465 5.096a6.5 6.5 0 009.131-9.131l-9.131 9.131zM8 0a8 8 0 100 16A8 8 0 008 0z"></path>
             </svg>
+            <button class="filter-save-button" id="save-exclusions">
+                <svg aria-hidden="true" height="16" viewBox="0 0 16 16" version="1.1" width="16" data-view-component="true"
+                    class="octicon octicon-search subnav-search-icon" style="position: unset; display: inline;">
+                    <path fill-rule="evenodd" d="M4.75 2.5a.25.25 0 00-.25.25v9.91l3.023-2.489a.75.75 0 01.954 0l3.023 2.49V2.75a.25.25 0 00-.25-.25h-6.5zM3 2.75C3 1.784 3.784 1 4.75 1h6.5c.966 0 1.75.784 1.75 1.75v11.5a.75.75 0 01-1.227.579L8 11.722l-3.773 3.107A.75.75 0 013 14.25V2.75z"></path>
+                </svg>
+            </button>
         </div>
         <action-list data-arrow-navigation="true" data-catalyst="">
             <file-tree data-target="diff-layout.fileTree" data-catalyst="">

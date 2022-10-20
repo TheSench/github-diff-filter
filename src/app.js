@@ -21,6 +21,7 @@
  */
 
 (function () {
+  const defaultInclusions = localStorage.getItem('defaultInclusions');
   const defaultExclusions = localStorage.getItem('defaultExclusions');
   // Only attach once
   if (!document.querySelector('#gdf-tree')) {
@@ -134,12 +135,19 @@
       }
       sortDiffContainers();
 
-      document.querySelector('#included-files')
-        .addEventListener('input', debounce(applyInclusions, 200));
+      const includedFiles = document.querySelector('#included-files')
+      includedFiles.addEventListener('input', debounce(applyInclusions, 200));
+      includedFiles.value = defaultInclusions;
+      if (defaultInclusions) applyInclusions({target: includedFiles});
+      document.querySelector('#save-inclusions')
+        .addEventListener('click', () => localStorage.setItem('defaultInclusions', includedFiles.value));
+
       const excludedFiles = document.querySelector('#excluded-files')
       excludedFiles.addEventListener('input', debounce(applyExclusions, 200));
       excludedFiles.value = defaultExclusions;
       if (defaultExclusions) applyExclusions({target: excludedFiles});
+      document.querySelector('#save-exclusions')
+        .addEventListener('click', () => localStorage.setItem('defaultExclusions', excludedFiles.value));
     }
 
     /**
