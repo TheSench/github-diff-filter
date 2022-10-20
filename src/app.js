@@ -187,10 +187,30 @@
       diffContainers.sort((a, b) => {
         const pathA = a.attributes['data-tagsearch-path'].value;
         const pathB = b.attributes['data-tagsearch-path'].value;
-        return pathA.localeCompare(pathB);
+        const dirAndFileA = getDirAndFile(pathA);
+        const dirAndFileB = getDirAndFile(pathB);
+        return compareDirAndPaths(dirAndFileA, dirAndFileB);
       });
       document.querySelector('.js-diff-progressive-container:last-child')
         .replaceChildren(...diffContainers);
+    }
+
+    function getDirAndFile(path) {
+      const [file, ...dirParts] = path.split("/").reverse();
+      const dir = dirParts.reverse().join("/");
+      return { dir: dir, file: file };
+    }
+
+    function compareDirAndPaths({ dir: dirA, file: fileA }, { dir: dirB, file: fileB }) {
+      if (dirA === dirB) {
+        return fileA.localeCompare(fileB);
+      } else if (dirA.includes(dirB)) {
+        return -1;
+      } else if (dirB.includes(dirA)) {
+        return 1;
+      } else {
+        return dirA.localeCompare(dirB);
+      }
     }
 
     /**
