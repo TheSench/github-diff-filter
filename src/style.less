@@ -25,4 +25,9 @@
         padding-left: 0;
         padding-right: 0;
     }
+
+    /* Hide empty folders */
+    .ActionList-item--hasSubItem:not(:has(ul li:not([hidden]))) {
+        display: none;
+    }
 }
