@@ -39,6 +39,10 @@
     const notIncludedElements = new Set();
     let updatingTree = false;
 
+
+    const additionsRegex = /\d+(?= additions?)/
+    const deletionsRegex = /\d+(?= deletions?)/
+
     appendStyles();
     appendViewedCheckboxes();
     appendFileTree();
@@ -424,25 +428,45 @@
     function updateCounts() {
       const diffStats = document.querySelectorAll(`[data-tagsearch-path]:not([hidden]) .diffstat`)
       const fileCount = diffStats.length;
-      // const additionsAndDeletions = getChanges(diffStats)
+      const {additions, deletions} = getChanges(diffStats);
+
       const statsButton = document.querySelector('.toc-diff-stats>button');
       statsButton.textContent = `${fileCount} changed files`
+
+      const withText = statsButton.nextSibling;
+      debugger;
+      for (let nextSibling = withText.nextSibling; nextSibling = withText.nextSibling; nextSibling) {
+        nextSibling.remove();
+      }
+      const additionsText = document.createElement('strong');
+      additionsText.textContent = `${additions} additions`;
+      const deletionsText = document.createElement('strong');
+      deletionsText.textContent = `${deletions} deletions`;
+      withText.after(deletionsText);
+      withText.after(' and ');
+      withText.after(additionsText);
     }
 
-    // const diffStatRegex = /((?<additions>\d+) additions)?( & )?((?<deletions>\d+) deletions)?/
-    // /**
-    //  * @param {NodeListOf<Element>} diffStats
-    //  */
-    // function getChanges(diffStats) {
-    //   const changes = {
-    //     additions: 0,
-    //     deletions: 0
-    //   }
-    //   diffStats.forEach(el => {
-    //     const diffStat = el.ariaLabel
-    //     const matches = /
-    //   })
-    // }
+    /**
+     * @param {NodeListOf<Element>} diffStats
+     */
+    function getChanges(diffStats) {
+      const changes = {
+        additions: 0,
+        deletions: 0
+      }
+      diffStats.forEach(({ariaLabel}) => {
+        changes.additions += getDiffStat(ariaLabel, additionsRegex);
+        changes.deletions += getDiffStat(ariaLabel, deletionsRegex);
+      });
+      return changes;
+    }
+
+    function getDiffStat(label, regex) {
+      return parseInt(
+        (label?.match(regex) ?? ['0'])[0]
+      );
+    }
 
     function toMultiRegex(wildcardPattern) {
       const regexParts = wildcardPattern.split(',')
