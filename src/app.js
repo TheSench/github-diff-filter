@@ -127,7 +127,7 @@
       filesContainer.querySelector('ul').append(
         ...buildFileTreeView()
       )
-      filesContainer.addEventListener('change', toggleTreeNode);
+      filesContainer.querySelector('file-tree').addEventListener("change", toggleTreeNode);
       // Move all children from first js-diff-progressive-container to second to resolve styling issues
       const diffContainers = document.querySelectorAll('.js-diff-progressive-container');
       if (diffContainers.length > 1) {
@@ -409,14 +409,14 @@
 
     function hideTreeEntry(pattern, hiddenSet) {
       [...document.querySelectorAll('file-tree [title]')]
-        .filter(el => el.title.match(pattern))
+        .filter(el => el.attributes['title']?.value.match(pattern))
         .map(el => el.closest('li'))
         .forEach(el => hide(el, hiddenSet));
     }
 
     function showTreeEntry(pattern, hiddenSet) {
       [...document.querySelectorAll('file-tree [title]')]
-        .filter(el => el.title.match(pattern))
+        .filter(el => el.attributes['title']?.value.match(pattern))
         .map(el => el.closest('li'))
         .forEach(el => show(el, hiddenSet));
       
@@ -426,25 +426,15 @@
      * 
      */
     function updateCounts() {
-      const diffStats = document.querySelectorAll(`[data-tagsearch-path]:not([hidden]) .diffstat`)
+      const diffStats = document.querySelectorAll(`.file:not([hidden]) .file-info>.sr-only`);
       const fileCount = diffStats.length;
       const {additions, deletions} = getChanges(diffStats);
 
-      const statsButton = document.querySelector('.toc-diff-stats>button');
-      statsButton.textContent = `${fileCount} changed files`
-
-      const withText = statsButton.nextSibling;
-      debugger;
-      for (let nextSibling = withText.nextSibling; nextSibling = withText.nextSibling; nextSibling) {
-        nextSibling.remove();
-      }
-      const additionsText = document.createElement('strong');
-      additionsText.textContent = `${additions} additions`;
-      const deletionsText = document.createElement('strong');
-      deletionsText.textContent = `${deletions} deletions`;
-      withText.after(deletionsText);
-      withText.after(' and ');
-      withText.after(additionsText);
+      const statsDiv = document.querySelector('#toc > div:nth-child(2)');
+      const changedFiles = fileCount === 1 ? `1 changed file` : `${fileCount} changed files`;
+      const additionText = additions === 1 ? `1 addition` : `${additions} additions`;
+      const deletionText = deletions === 1 ? `1 deletion` : `${deletions} deletions`;
+      statsDiv.innerHTML = ` Showing <strong>${changedFiles}</strong> with <strong>${additionText}</strong> and <strong>${deletionText}</strong>`;
     }
 
     /**
@@ -455,9 +445,9 @@
         additions: 0,
         deletions: 0
       }
-      diffStats.forEach(({ariaLabel}) => {
-        changes.additions += getDiffStat(ariaLabel, additionsRegex);
-        changes.deletions += getDiffStat(ariaLabel, deletionsRegex);
+      diffStats.forEach(({innerText}) => {
+        changes.additions += getDiffStat(innerText, additionsRegex);
+        changes.deletions += getDiffStat(innerText, deletionsRegex);
       });
       return changes;
     }
