@@ -32,6 +32,10 @@
     var fileTreeTemplate = '@@include("../temp/html/fileTree.html")';
     var dirNodeTemplate = '@@include("../temp/html/directoryNode.html")';
     var fileNodeTemplate = '@@include("../temp/html/fileNode.html")';
+    var addedVisual = '@@include("../temp/html/visualAdded.html")';
+    var deletedVisual = '@@include("../temp/html/visualDeleted.html")';
+    var modifiedVisual = '@@include("../temp/html/visualModified.html")';
+    var renamedVisual = '@@include("../temp/html/visualRenamed.html")';
 
     /** @type {Set<HTMLElement>} */
     const hiddenElements = new Set();
@@ -127,7 +131,7 @@
       filesContainer.querySelector('ul').append(
         ...buildFileTreeView()
       )
-      filesContainer.addEventListener('change', toggleTreeNode);
+      filesContainer.querySelector('file-tree').addEventListener("change", toggleTreeNode);
       // Move all children from first js-diff-progressive-container to second to resolve styling issues
       const diffContainers = document.querySelectorAll('.js-diff-progressive-container');
       if (diffContainers.length > 1) {
@@ -292,15 +296,29 @@
      */
     function buildFileNodes(files, level) {
       return files
-        .map(({ fullName, fileName, href }) => {
+        .map(({ fullName, fileName, href, type }) => {
           return document.createRange().createContextualFragment(
             fileNodeTemplate
               .replaceAll('{{fullName}}', fullName)
               .replaceAll('{{fileName}}', fileName)
               .replaceAll('{{href}}', href)
               .replaceAll('{{level}}', level)
+              .replaceAll('{{visual}}', getVisualTemplate(type))
           );
         });
+    }
+
+    function getVisualTemplate(type) {
+      switch (type) {
+        case 'added':
+          return addedVisual;
+        case 'deleted':
+          return deletedVisual;
+        case 'renamed':
+          return renamedVisual;
+        default:
+          return modifiedVisual;
+      }
     }
 
     /**
@@ -409,14 +427,14 @@
 
     function hideTreeEntry(pattern, hiddenSet) {
       [...document.querySelectorAll('file-tree [title]')]
-        .filter(el => el.title.match(pattern))
+        .filter(el => el.attributes['title']?.value.match(pattern))
         .map(el => el.closest('li'))
         .forEach(el => hide(el, hiddenSet));
     }
 
     function showTreeEntry(pattern, hiddenSet) {
       [...document.querySelectorAll('file-tree [title]')]
-        .filter(el => el.title.match(pattern))
+        .filter(el => el.attributes['title']?.value.match(pattern))
         .map(el => el.closest('li'))
         .forEach(el => show(el, hiddenSet));
       
@@ -426,25 +444,15 @@
      * 
      */
     function updateCounts() {
-      const diffStats = document.querySelectorAll(`[data-tagsearch-path]:not([hidden]) .diffstat`)
+      const diffStats = document.querySelectorAll(`.file:not([hidden]) .file-info>.sr-only`);
       const fileCount = diffStats.length;
       const {additions, deletions} = getChanges(diffStats);
 
-      const statsButton = document.querySelector('.toc-diff-stats>button');
-      statsButton.textContent = `${fileCount} changed files`
-
-      const withText = statsButton.nextSibling;
-      debugger;
-      for (let nextSibling = withText.nextSibling; nextSibling = withText.nextSibling; nextSibling) {
-        nextSibling.remove();
-      }
-      const additionsText = document.createElement('strong');
-      additionsText.textContent = `${additions} additions`;
-      const deletionsText = document.createElement('strong');
-      deletionsText.textContent = `${deletions} deletions`;
-      withText.after(deletionsText);
-      withText.after(' and ');
-      withText.after(additionsText);
+      const statsDiv = document.querySelector('#toc > div:nth-child(2)');
+      const changedFiles = fileCount === 1 ? `1 changed file` : `${fileCount} changed files`;
+      const additionText = additions === 1 ? `1 addition` : `${additions} additions`;
+      const deletionText = deletions === 1 ? `1 deletion` : `${deletions} deletions`;
+      statsDiv.innerHTML = ` Showing <strong>${changedFiles}</strong> with <strong>${additionText}</strong> and <strong>${deletionText}</strong>`;
     }
 
     /**
@@ -455,9 +463,9 @@
         additions: 0,
         deletions: 0
       }
-      diffStats.forEach(({ariaLabel}) => {
-        changes.additions += getDiffStat(ariaLabel, additionsRegex);
-        changes.deletions += getDiffStat(ariaLabel, deletionsRegex);
+      diffStats.forEach(({innerText}) => {
+        changes.additions += getDiffStat(innerText, additionsRegex);
+        changes.deletions += getDiffStat(innerText, deletionsRegex);
       });
       return changes;
     }
@@ -496,16 +504,29 @@
       return [...document.querySelectorAll('[data-tagsearch-path]')]
         .map(el => ({
           href: el.querySelector('a.Link--primary').href,
-          path: el.attributes['data-tagsearch-path'].value
+          path: el.attributes['data-tagsearch-path'].value,
+          type: getType(el)
         }))
-        .map(({ path, href }) => ({
+        .map(({ path, href, type }) => ({
           href: href,
           fullName: path,
           fileName: path.split('/').slice(-1)[0],
-          folders: path.split('/').slice(0, -1)
+          folders: path.split('/').slice(0, -1),
+          type
         }))
         .reduce(addToTree, emptyDir(''));
     }
+
+    function getType(el) {
+      if (el.attributes['data-file-deleted']?.value === 'true') {
+        return 'deleted';
+      } else if (el.querySelector('.file-header')?.innerText.includes('→')) {
+        return 'renamed';
+      } else {
+        return 'modified'
+      }
+      // TODO: Figure out how to determine "added"
+    };
 
     /**
      * 
@@ -523,11 +544,12 @@
         }
         parentDir = dir;
       });
-      const { fullName, fileName, href } = pathInfo;
+      const { fullName, fileName, href, type } = pathInfo;
       parentDir.files.push({
         fullName,
         fileName,
-        href
+        href,
+        type
       });
       return tree;
     }
@@ -563,6 +585,10 @@
       if (hiddenSet.has(el)) {
         hiddenSet.delete(el);
         el.hidden = shouldMarkHidden(el);
+        const parent = el.closest('ul')?.closest('li');
+        if (parent) {
+          show(parent, hiddenSet);
+        }
       }
     }
 

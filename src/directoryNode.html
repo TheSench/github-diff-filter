@@ -1,25 +1,60 @@
-<li class="ActionList-item ActionList-item--hasSubItem js-tree-node" aria-level="{{level}}" role="treeitem" style="--ActionList-tree-depth: {{level}};" data-skip-substring-filter="" data-tree-entry-type="directory">
-    <button class="ActionList-content gdf-tree-row" aria-expanded="true" type="button" data-action="click:action-list#handleItemWithSubItemClick" tabindex="-1" title="{{fullName}}">
-        <span class="ActionList-item-action ActionList-item-action--leading">
-            <svg aria-hidden="true" height="16" viewBox="0 0 16 16" version="1.1" width="16" data-view-component="true" class="octicon octicon-chevron-down ActionList-item-collapseIcon">
-                <use href="#octicon_chevron-down_16"></use>
-            </svg>
-        </span>
-        <span class="ActionList-item-visual ActionList-item-visual--leading">
-            <svg aria-label="Directory" aria-hidden="true" height="16" viewBox="0 0 16 16" version="1.1" width="16" data-view-component="true" class="octicon octicon-file-directory-fill hx_color-icon-directory">
-                <use href="#octicon_file-directory-fill_16"></use>
-            </svg>
-        </span>
-        <span class="ActionList-item-label ActionList-item-label--truncate">
-            {{dirName}}
-        </span>
-    </button>
-    <ul class="ActionList ActionList--subGroup filterable-active" data-filterable-for="file-tree-filter-field" data-filterable-type="substring" role="group">
-    </ul>
-    <input
-        type="checkbox"
-        class="gdf-tree-checkbox"
-        data-fullname="{{fullName}}/*"
-        checked
-    />
+<li
+  class="ActionList-item ActionList-item--hasSubItem js-tree-node"
+  aria-level="{{level}}"
+  role="treeitem"
+  style="--ActionList-tree-depth: {{level}};"
+  data-skip-substring-filter=""
+  data-tree-entry-type="directory"
+>
+  <button
+    class="ActionList-content gdf-tree-row"
+    aria-expanded="true"
+    type="button"
+    data-action="click:experimental-action-list#handleItemWithSubItemClick"
+    tabindex="-1"
+    title="{{fullName}}"
+  >
+    <span class="ActionList-item-action ActionList-item-action--leading">
+      <svg
+        aria-hidden="true"
+        height="16"
+        viewBox="0 0 16 16"
+        version="1.1"
+        width="16"
+        data-view-component="true"
+        class="octicon octicon-chevron-down ActionList-item-collapseIcon"
+      >
+        <use href="#octicon_chevron-down_16"></use>
+      </svg>
+    </span>
+    <span class="ActionList-item-visual ActionList-item-visual--leading">
+      <svg
+        aria-label="Directory"
+        aria-hidden="true"
+        height="16"
+        viewBox="0 0 16 16"
+        version="1.1"
+        width="16"
+        data-view-component="true"
+        class="octicon octicon-file-directory-fill hx_color-icon-directory"
+      >
+        <use href="#octicon_file-directory-fill_16"></use>
+      </svg>
+    </span>
+    <span class="ActionList-item-label ActionList-item-label--truncate">
+      {{dirName}}
+    </span>
+  </button>
+  <ul
+    class="ActionList ActionList--subGroup filterable-active"
+    data-filterable-for="file-tree-filter-field"
+    data-filterable-type="substring"
+    role="group"
+  ></ul>
+  <input
+    type="checkbox"
+    class="gdf-tree-checkbox"
+    data-fullname="{{fullName}}/*"
+    checked
+  />
 </li>
