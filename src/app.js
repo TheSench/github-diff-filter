@@ -585,6 +585,10 @@
       if (hiddenSet.has(el)) {
         hiddenSet.delete(el);
         el.hidden = shouldMarkHidden(el);
+        const parent = el.closest('ul')?.closest('li');
+        if (parent) {
+          show(parent, hiddenSet);
+        }
       }
     }
 
