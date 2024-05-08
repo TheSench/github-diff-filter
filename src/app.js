@@ -32,6 +32,10 @@
     var fileTreeTemplate = '@@include("../temp/html/fileTree.html")';
     var dirNodeTemplate = '@@include("../temp/html/directoryNode.html")';
     var fileNodeTemplate = '@@include("../temp/html/fileNode.html")';
+    var addedVisual = '@@include("../temp/html/visualAdded.html")';
+    var deletedVisual = '@@include("../temp/html/visualDeleted.html")';
+    var modifiedVisual = '@@include("../temp/html/visualModified.html")';
+    var renamedVisual = '@@include("../temp/html/visualRenamed.html")';
 
     /** @type {Set<HTMLElement>} */
     const hiddenElements = new Set();
@@ -292,15 +296,29 @@
      */
     function buildFileNodes(files, level) {
       return files
-        .map(({ fullName, fileName, href }) => {
+        .map(({ fullName, fileName, href, type }) => {
           return document.createRange().createContextualFragment(
             fileNodeTemplate
               .replaceAll('{{fullName}}', fullName)
               .replaceAll('{{fileName}}', fileName)
               .replaceAll('{{href}}', href)
               .replaceAll('{{level}}', level)
+              .replaceAll('{{visual}}', getVisualTemplate(type))
           );
         });
+    }
+
+    function getVisualTemplate(type) {
+      switch (type) {
+        case 'added':
+          return addedVisual;
+        case 'deleted':
+          return deletedVisual;
+        case 'renamed':
+          return renamedVisual;
+        default:
+          return modifiedVisual;
+      }
     }
 
     /**
@@ -486,16 +504,29 @@
       return [...document.querySelectorAll('[data-tagsearch-path]')]
         .map(el => ({
           href: el.querySelector('a.Link--primary').href,
-          path: el.attributes['data-tagsearch-path'].value
+          path: el.attributes['data-tagsearch-path'].value,
+          type: getType(el)
         }))
-        .map(({ path, href }) => ({
+        .map(({ path, href, type }) => ({
           href: href,
           fullName: path,
           fileName: path.split('/').slice(-1)[0],
-          folders: path.split('/').slice(0, -1)
+          folders: path.split('/').slice(0, -1),
+          type
         }))
         .reduce(addToTree, emptyDir(''));
     }
+
+    function getType(el) {
+      if (el.attributes['data-file-deleted']?.value === 'true') {
+        return 'deleted';
+      } else if (el.querySelector('.file-header')?.innerText.includes('→')) {
+        return 'renamed';
+      } else {
+        return 'modified'
+      }
+      // TODO: Figure out how to determine "added"
+    };
 
     /**
      * 
@@ -513,11 +544,12 @@
         }
         parentDir = dir;
       });
-      const { fullName, fileName, href } = pathInfo;
+      const { fullName, fileName, href, type } = pathInfo;
       parentDir.files.push({
         fullName,
         fileName,
-        href
+        href,
+        type
       });
       return tree;
     }
